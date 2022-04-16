@@ -500,7 +500,9 @@ export async function getTableHtml(webview: Webview, file: string): Promise<stri
             }
         }
     };
+
     const data = ${String(content)};
+    
     const gridOptions = {
         defaultColDef: {
             sortable: true,
@@ -511,7 +513,7 @@ export async function getTableHtml(webview: Webview, file: string): Promise<stri
             }
         },
         columnDefs: data.columns,
-        rowData: data.data,
+        rowModelType: 'infinite',
         rowSelection: 'multiple',
         pagination: true,
         enableCellTextSelection: true,
@@ -522,6 +524,7 @@ export async function getTableHtml(webview: Webview, file: string): Promise<stri
             autoSizeAll(false);
         }
     };
+
     function updateTheme() {
         const gridDiv = document.querySelector('#myGrid');
         if (document.body.classList.contains('vscode-light')) {
@@ -545,6 +548,25 @@ export async function getTableHtml(webview: Webview, file: string): Promise<stri
         });
         const gridDiv = document.querySelector('#myGrid');
         new agGrid.Grid(gridDiv, gridOptions);
+
+        const dataSource = {
+            rowCount: undefined, // behave as infinite scroll
+    
+            getRows: function (params) {
+                console.log('asking for ' + params.startRow + ' to ' + params.endRow);
+            
+            const rowsThisPage = data.data.slice(
+                    params.startRow,
+                    params.endRow
+            );
+    
+            params.successCallback(rowsThisPage, data.data.length)
+            
+            }
+        }
+
+
+        gridOptions.api.setDatasource(dataSource);
     });
     function onload() {
         updateTheme();
